@@ -1,0 +1,40 @@
+{
+  "intro": "Everything you need to know about attending the event.",
+  "sections": [
+    {
+      "id": "theme",
+      "title": "Theme",
+      "body": "Each club will nominate a country as its theme. If more than one club selects the same country, the organising committee will advise the clubs involved. While duplicate themes are not a problem, one club may choose to select an alternative theme.
+      
+      Clubs are encouraged to embrace their theme through:
+      - Beer styles
+      - Bar decorations
+      - Dress or costumes
+      - Serving food or snacks
+      
+      Note: Choosing a country does not mean all beers (or cider, or mead) must be traditional styles from that country. For example, a club representing New Zealand could still brew a German Pilsner but use New Zealand hops or give it a New Zealand-inspired name.
+      
+      We encourage a wide variety of styles, so don't feel restricted by the theme. The goal is fun and creativity rather than strict style accuracy."
+    },
+    {
+      "id": "music",
+      "title": "Music & Entertainment",
+      "body": "The event will feature:\n- Live Music and DJ\n- Break out sessions and presentation by sponsors\n- Sponsor stalls\n- Social activities\n- Optional fun awards\n\nThe focus is on community and sharing great beer rather than competition."
+    },
+    {
+      "id": "rsa",
+      "title": "Responsible Service of Alcohol",
+      "body": "Although Brewstock is a private event for club members, all participants are expected to support responsible service of alcohol.\n\nClubs should:\n- Ensure all beverage servers hold a current RSA\n- Serve small tasting pours rather than full pints (30-60ml)\n- Comply with responsible service of alcohol laws, in regards to serving intoxicated, impaired or quarrelsome people\n- Encourage attendees to pace themselves\n- Promote water consumption and food availability\n\nWater will be freely available at clearly marked locations throughout the venue, and attendees should be encouraged to make use of these facilities throughout the event.\n\nPET glasses will be made available by the organising committee for all attendees. Clubs are encouraged to use tasting-sized pours to promote responsible consumption and allow attendees to sample beverages from multiple clubs.\n\nEach club should ensure that those serving beverages are comfortable monitoring consumption and acting responsibly.\n\nThe goal is for everyone to enjoy the event in a safe and respectful environment."
+    },
+    {
+      "id": "transport",
+      "title": "Transport",
+      "body": "The venue is approximately a 10-minute drive from both Hurstbridge Station and Mernda Station.\n\nRideshare services are available from the stations; however, return rides later in the evening may take some time to arrive.\n\nThe organising committee will arrange a number of maxi taxis at key times throughout the event to transport attendees to both stations. Further details will be provided closer to the event.\n\nThose attending may want to look into accommodation for the night in Diamond Creek."
+    },
+    {
+      "id": "camping",
+      "title": "Camping",
+      "body": "Very limited camping space is available on-site.\n\nMembers interested in camping should contact the organising committee.\n\nPriority will be given to attendees travelling from clubs located furthest from the venue."
+    }
+  ]
+}

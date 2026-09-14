@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Keg King",
+    "slug": "keg-king",
+    "website": "https://www.kegking.com.au",
+    "blurb": "Melbourne-based Keg King is Australia's leading home brewing and beverage dispensing equipment supplier. Since 2009 they have been supplying kegs, fermenters, kegerators, full brewing systems, beer kits, malt, hops, yeast and food-grade CO2 to brewers of beer, cider and mead across Australia."
+  },
+  {
+    "name": "BOC",
+    "slug": "boc",
+    "website": "https://www.boc.com.au",
+    "blurb": "BOC Australia, a Linde company, is the nation's leading supplier of industrial, medical and scientific gases. Their food-grade CO2 and beverage gases are essential for carbonation, fermentation control and kegging, making them a reliable partner for home brewers and cider makers everywhere."
+  },
+  {
+    "name": "VicBrew",
+    "slug": "vicbrew",
+    "website": "https://www.vicbrew.org",
+    "blurb": "Vicbrew connects the homebrewing community across Victoria through the state championships, club collaboration, judging education, and a shared calendar of competitions."
+  },
+  {
+    "name": "Backyard Homebrew Co",
+    "slug": "backyard-homebrew-co",
+    "website": "https://www.backyardhomebrew.com.au",
+    "blurb": "Located in Brooklyn, Victoria, Backyard Homebrew Co has supported Australian backyard brewers for over 20 years. They specialise in fresh grains, premium hops, active yeast strains and complete brewing equipment, with same-day dispatch on orders placed before 3 pm."
+  },
+  {
+    "name": "Braumeister",
+    "slug": "braumeister",
+    "website": "https://www.braumeister.com.au",
+    "blurb": "Braumeister supplies premium brewing systems and accessories for home brewers and commercial facilities alike. Their flagship automated brewing systems are supported by knowledgeable technical staff operating from Albert Park, Victoria."
+  },
+  {
+    "name": "Kauri Winemaking",
+    "slug": "kauri-winemaking",
+    "website": "https://www.kauriwine.com/au/",
+    "blurb": "Based in Albert Park, Victoria, Kauri calls itself the region's Fermentation Experts. They supply ingredients, equipment and guidance for winemaking, beer brewing and cider making, supporting home fermenters across Australia and New Zealand."
+  },
+  {
+    "name": "HPA Hop Products Australia",
+    "slug": "hpa-hop-products-australia",
+    "website": "https://www.hopproducts.com.au",
+    "blurb": "HPA Hop Products Australia is a specialist hop supplier dedicated to providing premium hop varieties to home brewers and commercial breweries. Their focus on quality Australian hops supports the nation's craft beer and home brewing communities."
+  },
+  {
+    "name": "Yakima Chief Hops",
+    "slug": "yakima-chief-hops",
+    "website": "https://www.yakimachief.com",
+    "blurb": "Yakima Chief Hops is a grower-owned collective of family hop farms dating back to 1869. Headquartered in Washington State, they are global leaders in premium hop supply and provide Australian brewers with flagship varieties and innovative hop products."
+  },
+  {
+    "name": "Weyermann Malts",
+    "slug": "weyermann-malts",
+    "website": "https://www.weyermann.de",
+    "blurb": "Weyermann is Germany's renowned specialty malt producer, supplying premium brewing malts to craft brewers and home brewers around the world. Their caramel, roasted, wheat and specialty malts help create complex, authentic European malt character."
+  },
+  {
+    "name": "Bintani Australia",
+    "slug": "bintani-australia",
+    "website": "https://www.bintani.com.au",
+    "blurb": "Bintani Australia is a comprehensive brewing ingredients distributor supplying hops, malt, yeast, extracts, flavours and process aids from world-class North American and European suppliers. Their experienced staff provide one-stop shopping and nationwide support for Australian brewers."
+  }
+]
