@@ -170,6 +170,19 @@ p {
   font-size: 1.1em;
 }
 
+/* Tickets off sale — controlled by "ticketsAvailable" in data/site.json */
+.ticket-link.is-disabled,
+.ticket-link.is-disabled:hover,
+.ticket-link.is-disabled:focus {
+  background: linear-gradient(135deg, #b9b3a7 0%, #8e887c 100%);
+  color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.8;
+  transform: none;
+}
+
 .logo-link {
   display: block;
   text-decoration: none;

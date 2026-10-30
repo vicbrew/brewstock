@@ -12,7 +12,7 @@ A static, two-page website for Brewstock — a Victorian home brew festival on *
 | `js/components.js` | Loads the shared navigation and footer |
 | `js/sponsors.js` | Loads `data/sponsors.json` and renders the sponsor cards |
 | `js/info.js` | Loads `data/info.json` and renders the event details page |
-| `data/site.json` | Site-wide text and ticket URL |
+| `data/site.json` | Site-wide text, ticket URL and navigation feature flags |
 | `data/sponsors.json` | Sponsor names, websites and blurbs |
 | `data/info.json` | Event details page content |
 | `partials/nav.html` | Shared navigation markup |
@@ -30,7 +30,25 @@ A static, two-page website for Brewstock — a Victorian home brew festival on *
   - Lines starting with `1. `, `2. ` etc. become numbered lists.
 
 ### Change the ticket link
-Edit `data/site.json` and update `ticketUrl`. The link is used in the navigation button and on the home-page hero. Also update `partials/nav.html` if you want to change the link text or placement.
+Edit `data/site.json` and update `ticketUrl`. Also update `partials/nav.html` (and the fallback navigation in `index.html` and `info.html`) with the same URL if you want to change the link destination, text or placement.
+
+### Show or hide the Beer List link
+The **Beer List** link in the main navigation is hidden by default. To show it, set `showBeerList` to `true` in `data/site.json`:
+
+```json
+"showBeerList": true
+```
+
+Set it back to `false` to hide the link again. The link points to `https://beers.brewstock.org` and is defined in `partials/nav.html` (plus the fallback navigation in `index.html` and `info.html`) if the URL ever changes.
+
+### Disable ticket sales
+Set `ticketsAvailable` to `false` in `data/site.json` to grey out the **Buy tickets** button and show a not-allowed cursor. Clicks are also blocked while it is disabled:
+
+```json
+"ticketsAvailable": false
+```
+
+Set it back to `true` to re-enable the button. The navigation still shows the button so visitors can see tickets exist, but they cannot proceed to purchase.
 
 ### Add, remove or edit a sponsor
 1. Open `data/sponsors.json`.
