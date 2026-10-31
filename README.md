@@ -18,6 +18,7 @@ A static, two-page website for Brewstock — a Victorian home brew festival on *
 | `partials/nav.html` | Shared navigation markup |
 | `partials/footer.html` | Shared footer markup |
 | `images/brewstock-logo.svg` | Event logo placeholder |
+| `images/brewstock-2026-social.png` | 1200×630 image used for social media link previews |
 | `images/sponsors/` | Sponsor logo placeholders |
 
 ## How to make common changes
@@ -65,6 +66,18 @@ Set it back to `true` to re-enable the button. The navigation still shows the bu
 2. Update `<title>`, `<body data-page="...">`, and the page content.
 3. Add a link to the new page in `partials/nav.html` and in the fallback navigation inside `index.html` and `info.html`.
 4. Update the `data-page` value on the new page's body tag and add a matching `data-page` attribute to the new nav link.
+
+### Update the social sharing image
+When the site is shared on social media, the preview image comes from the `og:image` and `twitter:image` tags in `index.html` and `info.html`. Those tags point to `images/brewstock-2026-social.png`.
+
+Social platforms do not support SVG previews, so that file is a 1200×630 PNG generated from `images/Brewstock 2026 Black and White.svg`. It is only referenced by the meta tags and is never displayed on the website. To regenerate it after changing the SVG (requires ImageMagick):
+
+```bash
+magick -background none -density 600 "images/Brewstock 2026 Black and White.svg" -resize 960x /tmp/brewstock-logo.png
+magick -size 1200x630 xc:white /tmp/brewstock-logo.png -gravity center -composite -strip -depth 8 images/brewstock-2026-social.png
+```
+
+If you rename the PNG, update the `og:image` and `twitter:image` tags in both pages.
 
 ### Change colours or fonts
 Edit the custom properties at the top of `css/styles.css`. The earthy palette is defined there so a single change updates the whole site.
