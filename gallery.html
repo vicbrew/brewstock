@@ -44,6 +44,15 @@
             <p class="gallery-status" id="gallery-status" role="status">Loading photos…</p>
 
             <label class="gallery-pagesize">
+              <span class="gallery-pagesize__label">Sort by</span>
+              <select class="gallery-pagesize__select" id="gallery-sort">
+                <option value="taken-asc" selected>Date taken (oldest first)</option>
+                <option value="added-desc">Date added (newest first)</option>
+                <option value="random">Random</option>
+              </select>
+            </label>
+
+            <label class="gallery-pagesize">
               <span class="gallery-pagesize__label">Photos per page</span>
               <select class="gallery-pagesize__select" id="gallery-page-size">
                 <option value="12">12</option>

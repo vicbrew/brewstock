@@ -23,11 +23,17 @@
   const DEFAULT_PAGE_SIZE = 24;
   const PAGE_SIZE_OPTIONS = [12, 24, 48, 96];
   const PAGE_SIZE_STORAGE_KEY = 'brewstock.gallery.pageSize';
+  const SORT_STORAGE_KEY = 'brewstock.gallery.sort';
+  const SORT_OPTIONS = ['taken-asc', 'added-desc', 'random'];
+  const DEFAULT_SORT = 'taken-asc';
   const ZOOM_STEPS = [1, 1.5, 2, 3, 4];
 
   const state = {
     baseUrl: DEFAULT_BASE_URL + '/',
+    sourceImages: [],
     images: [],
+    sort: DEFAULT_SORT,
+    seed: 0,
     index: -1,
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -56,6 +62,100 @@
 
   function photoAlt(index) {
     return `Brewstock 2026 photo ${index + 1} of ${state.images.length}`;
+  }
+
+  /* ---------- sorting ---------- */
+
+  function mulberry32(seed) {
+    let value = seed;
+
+    return function next() {
+      value |= 0;
+      value = (value + 0x6d2b79f5) | 0;
+      let t = Math.imul(value ^ (value >>> 15), 1 | value);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function shuffled(list) {
+    const rng = mulberry32(state.seed);
+    const result = list.slice();
+
+    for (let index = result.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(rng() * (index + 1));
+      const held = result[index];
+      result[index] = result[swap];
+      result[swap] = held;
+    }
+
+    return result;
+  }
+
+  function sortImages(images) {
+    const list = images.slice();
+
+    if (state.sort === 'random') return shuffled(list);
+
+    // Array.prototype.sort is stable, so anything without a date (or without a
+    // date added) keeps the order it has in gallery.json.
+    if (state.sort === 'added-desc') {
+      return list.sort((a, b) => {
+        const addedA = a.uploadedAt || '';
+        const addedB = b.uploadedAt || '';
+        if (!addedA && !addedB) return 0;
+        if (!addedA) return 1;
+        if (!addedB) return -1;
+        return addedA < addedB ? 1 : addedA > addedB ? -1 : 0;
+      });
+    }
+
+    // Date taken, oldest first. Images with no capture date go last.
+    return list.sort((a, b) => {
+      const takenA = a.takenAt || '';
+      const takenB = b.takenAt || '';
+      if (!takenA && !takenB) return 0;
+      if (!takenA) return 1;
+      if (!takenB) return -1;
+      return takenA < takenB ? -1 : takenA > takenB ? 1 : 0;
+    });
+  }
+
+  function applySort() {
+    state.images = sortImages(state.sourceImages);
+    state.page = 1;
+    renderGrid();
+  }
+
+  function restoreSort() {
+    let saved = '';
+
+    try {
+      saved = localStorage.getItem(SORT_STORAGE_KEY) || '';
+    } catch (_error) {
+      saved = '';
+    }
+
+    if (SORT_OPTIONS.indexOf(saved) !== -1) {
+      state.sort = saved;
+    }
+
+    $('gallery-sort').value = state.sort;
+  }
+
+  function setSort(value) {
+    if (SORT_OPTIONS.indexOf(value) === -1) return;
+
+    state.sort = value;
+    state.seed = Math.floor(Math.random() * 4294967296);
+
+    try {
+      localStorage.setItem(SORT_STORAGE_KEY, value);
+    } catch (_error) {
+      // Storage may be unavailable; the choice simply will not be remembered.
+    }
+
+    applySort();
   }
 
   /* ---------- grid ---------- */
@@ -489,6 +589,10 @@
       applyPageSize(event.target.value);
     });
 
+    $('gallery-sort').addEventListener('change', (event) => {
+      setSort(event.target.value);
+    });
+
     $('gallery-prev').addEventListener('click', () => goToPage(state.page - 1, { focusPager: true, direction: 'previous' }));
     $('gallery-next').addEventListener('click', () => goToPage(state.page + 1, { focusPager: true, direction: 'next' }));
 
@@ -598,6 +702,8 @@
     const status = $('gallery-status');
 
     restorePageSize();
+    restoreSort();
+    state.seed = Math.floor(Math.random() * 4294967296);
 
     try {
       const response = await fetch(GALLERY_JSON_URL, { cache: 'no-store' });
@@ -618,9 +724,8 @@
         return;
       }
 
-      state.images = images;
-      state.page = 1;
-      renderGrid();
+      state.sourceImages = images;
+      applySort();
     } catch (error) {
       console.warn('Brewstock gallery load failed:', error);
       status.textContent = 'Unable to load the gallery at the moment. Please check back soon.';

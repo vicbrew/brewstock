@@ -84,6 +84,18 @@ async function run() {
   assert.ok(signedHeaders.includes('cache-control'), 'cache-control must be signed');
   assert.ok(signedHeaders.includes('x-amz-content-sha256'), 'payload hash header must be signed');
 
+  // Range reads keep the EXIF backfill cheap.
+  await client.getBlob('large/photo.jpg', { range: 'bytes=0-262143' });
+  call = lastCall();
+  assert.strictEqual(call.init.method, 'GET');
+  assert.strictEqual(headerValue(call.init.headers, 'range'), 'bytes=0-262143');
+  const rangeSigned = /SignedHeaders=([a-z0-9;-]+)/.exec(headerValue(call.init.headers, 'authorization'))[1].split(';');
+  assert.ok(rangeSigned.includes('range'), 'range header must be signed');
+
+  await client.getBlob('large/photo.jpg');
+  call = lastCall();
+  assert.strictEqual(headerValue(call.init.headers, 'range'), undefined, 'no range header by default');
+
   // copyObject: path-style copy source with the key encoded once.
   await client.copyObject('photos/Été 2026 #1.jpg', 'large/photos/Été 2026 #1.jpg');
   call = lastCall();

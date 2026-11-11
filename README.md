@@ -97,6 +97,12 @@ disallows it. Share the URL directly with attendees.
 
 The page fetches `https://img.brewstock.org/gallery.json` and renders thumbnails in the order stored in that file.
 
+- **Sort by** — chooses the display order and is remembered per browser:
+  - **Date taken (oldest first)** — the default. Uses the capture date read from each photo's EXIF metadata. Photos
+    without a capture date appear after the dated ones, keeping their `gallery.json` order.
+  - **Date added (newest first)** — uses the time the photo was accepted into the gallery.
+  - **Random** — a fresh shuffle each time the page is loaded. The order stays fixed while paging or opening photos,
+    so the grid does not reshuffle underneath you.
 - **Photos per page** — defaults to 24, with 12, 48 and 96 available. The choice is remembered per browser. A pager
   appears under the grid when there is more than one page.
 - **Viewer** — click a thumbnail for the full-size image. Previous/next buttons, arrow keys and swipe move between
@@ -248,9 +254,9 @@ Click a thumbnail to open the full-size preview before deciding:
 
 Tick images, then choose:
 
-- **Accept & process** — the image is downloaded, a 500px JPEG thumbnail (quality 82, EXIF stripped, white matte for
-  transparency) is written to `thumbs/`, the original is copied to `large/`, the root copy is deleted, and the entry is
-  saved to `gallery.json`.
+- **Accept & process** — the image is downloaded, its EXIF capture date is read, a 500px JPEG thumbnail (quality 82,
+  EXIF stripped, white matte for transparency) is written to `thumbs/`, the original is copied to `large/`, the root copy
+  is deleted, and the entry is saved to `gallery.json`.
 - **Archive selected** — the image is copied to `archive/`, the root copy is deleted, and no thumbnail or manifest
   entry is created.
 
@@ -287,6 +293,23 @@ files, and images that still exist in the root after being accepted. It also reb
 The CORS policy is shown read-only with a copy button — it has to be applied in the Cloudflare dashboard, because a
 bucket without a CORS policy cannot serve the request that would apply one.
 
+### Capture dates
+
+The gallery's default sort uses the date each photo was taken, which is read from the EXIF metadata inside the original
+file. New images get this automatically when they are accepted or restored from the archive.
+
+Images processed before capture dates existed have none stored. To fill them in, open **Bucket health → Capture dates**
+and choose **Extract missing capture dates**. For each entry without a date, the tool reads the first 256 KB of the
+original in `large/` (a range request — it does not download the whole photo), parses the EXIF, and saves the result to
+`gallery.json`.
+
+- `DateTimeOriginal` is preferred, then `DateTimeDigitized`, then `DateTime`.
+- JPEG and PNG (with an `eXIf` chunk) are supported. HEIC, AVIF, WebP and GIF usually have no readable EXIF here, so
+  they keep whatever date they already had and are shown as "No capture date".
+- **Re-read all dates** re-scans every image, for example after replacing a file in `large/`.
+- Dates are stored without a time zone (`2026-11-07T14:32:10`), exactly as the camera recorded them. That is why the
+  gallery can sort them as plain text and why times match the photographer's camera clock.
+
 ### `gallery.json` format
 
 ```json
@@ -299,13 +322,19 @@ bucket without a CORS policy cannot serve the request that would apply one.
       "key": "IMG_0001.jpg",
       "large": "large/IMG_0001.jpg",
       "thumb": "thumbs/IMG_0001.jpg",
+      "takenAt": "2026-11-07T14:32:10",
       "uploadedAt": "2026-11-11T08:00:00.000Z"
     }
   ]
 }
 ```
 
-The array order is the gallery order. Paths are relative to the bucket root; the gallery joins them to `baseUrl`.
+- `takenAt` — EXIF capture date, naive local time (`YYYY-MM-DDTHH:MM:SS`). Optional: missing until it has been read,
+  in which case the photo sorts after the dated ones.
+- `uploadedAt` — when the photo was accepted, in UTC.
+
+The array order is the fallback order: the gallery keeps it for photos that have no date to sort by, and **Random**
+ignores it entirely. Paths are relative to the bucket root; the gallery joins them to `baseUrl`.
 
 ### Supported formats
 
@@ -315,11 +344,12 @@ still be archived; convert it to JPEG first if it should appear in the gallery.
 
 ### Tool self-tests
 
-The hand-written SigV4 signer is verified against the published AWS Signature Version 4 examples:
+The hand-written SigV4 signer and the EXIF reader are covered by Node tests:
 
 ```bash
 node testing/r2-signing.test.js
 node testing/r2-client.test.js
+node testing/exif.test.js
 ```
 
 ## Serving the site

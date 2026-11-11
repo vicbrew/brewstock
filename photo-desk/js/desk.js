@@ -56,6 +56,7 @@
     orderSaving: false,
     connectionTest: null,
     connectionTestRunning: false,
+    dateScan: null,
     dragIndex: null,
   };
 
@@ -265,6 +266,7 @@
         key: typeof item.key === 'string' && item.key ? item.key : large.replace(/^large\//, ''),
         large,
         thumb,
+        takenAt: typeof item.takenAt === 'string' ? item.takenAt : '',
         uploadedAt: typeof item.uploadedAt === 'string' ? item.uploadedAt : '',
         thumbUrl: '',
       });
@@ -1366,6 +1368,12 @@
     const added = image.uploadedAt ? `Added ${formatDateTime(image.uploadedAt)}` : 'Added date unknown';
     body.append(createElement('p', 'admin-card__meta', added));
 
+    body.append(createElement(
+      'p',
+      'admin-card__meta',
+      image.takenAt ? `Taken ${formatDateTime(image.takenAt)}` : 'No capture date'
+    ));
+
     if (!state.listings.large.has(image.large)) {
       body.append(createElement('p', 'admin-card__badge admin-card__badge--warning', 'Large file missing'));
     }
@@ -1606,6 +1614,7 @@
 
       try {
         const blob = await state.client.getBlob(file.key);
+        const takenAt = await readTakenAt(blob);
 
         const thumbnail = await createThumbnail(blob);
         const thumbKey = thumbnailKeyFor(file.name);
@@ -1622,6 +1631,7 @@
           key: file.name,
           large: `large/${file.name}`,
           thumb: thumbKey,
+          takenAt,
           uploadedAt: new Date().toISOString(),
           thumbUrl: '',
         });
@@ -1724,6 +1734,131 @@
     }
   }
 
+  async function extractCaptureDates(rescanAll) {
+    if (state.busy || !state.client) return;
+
+    const targets = state.gallery.images.filter((image) => rescanAll || !image.takenAt);
+
+    if (targets.length === 0) {
+      showToast('Every gallery image already has a capture date.');
+      return;
+    }
+
+    if (state.jsonError) {
+      showBanner({
+        title: 'gallery.json needs attention',
+        message: 'Capture dates are saved into gallery.json, so it must be valid first.',
+      });
+      return;
+    }
+
+    const choice = await askChoice({
+      title: rescanAll ? 'Re-read every capture date?' : 'Extract missing capture dates?',
+      message: `The first ${Math.round(EXIF_HEAD_BYTES / 1024)} KB of ${plural(targets.length, 'image')} will be read from large/. Dates are read from the photo's EXIF metadata. Images without EXIF keep their current date (or none).`,
+      options: [
+        { label: 'Cancel', value: 'cancel' },
+        { label: 'Extract', value: 'go', variant: 'primary' },
+      ],
+    });
+    if (choice !== 'go') return;
+
+    setAppBusy(true);
+    state.dateScan = { done: 0, total: targets.length, found: 0 };
+    renderHealthTab();
+
+    const failures = [];
+    let changed = false;
+
+    for (const image of targets) {
+      try {
+        const head = await state.client.getBlob(image.large, { range: `bytes=0-${EXIF_HEAD_BYTES - 1}` });
+        const Exif = window.BrewstockExif;
+        const result = Exif ? Exif.read(await head.arrayBuffer()) : null;
+
+        if (result && result.takenAt) {
+          image.takenAt = result.takenAt;
+          state.dateScan.found += 1;
+          changed = true;
+        } else if (rescanAll && image.takenAt) {
+          image.takenAt = '';
+          changed = true;
+        }
+      } catch (error) {
+        failures.push(`${image.key}: ${describeError(error)}`);
+      }
+
+      state.dateScan.done += 1;
+      renderHealthTab();
+    }
+
+    if (changed) {
+      try {
+        await saveGallery();
+      } catch (error) {
+        state.lastSaveFailed = true;
+        failures.push(`gallery.json could not be saved: ${describeError(error)}`);
+      }
+    }
+
+    const found = state.dateScan ? state.dateScan.found : 0;
+    state.dateScan = null;
+    setAppBusy(false);
+    renderAll();
+
+    if (failures.length) {
+      showBanner({
+        title: state.lastSaveFailed ? 'gallery.json could not be saved' : 'Some capture dates could not be read',
+        items: failures,
+        retry: state.lastSaveFailed,
+      });
+    } else {
+      showToast(`Read ${plural(targets.length, 'image')} · ${found} capture ${found === 1 ? 'date' : 'dates'} found.`);
+    }
+  }
+
+  function createCaptureDateSection() {
+    const withDates = state.gallery.images.filter((image) => image.takenAt).length;
+    const missing = state.gallery.images.length - withDates;
+    const scanning = state.dateScan;
+
+    const section = createElement('section', 'health-section');
+    section.append(createElement('h3', null, 'Capture dates'));
+    section.append(createElement(
+      'p',
+      'health-section__description',
+      'The gallery can sort by the date a photo was taken, which comes from the EXIF metadata inside the original file. Images added before this existed have no stored date; extract them here. Only the first 256 KB of each file is downloaded.'
+    ));
+
+    const facts = createElement('dl', 'health-facts');
+    facts.append(createElement('dt', null, 'With a capture date'));
+    facts.append(createElement('dd', null, String(withDates)));
+    facts.append(createElement('dt', null, 'Without a capture date'));
+    facts.append(createElement('dd', null, String(missing)));
+    section.append(facts);
+
+    if (scanning) {
+      section.append(createElement('p', 'health-section__description', `Reading ${Math.min(scanning.done + 1, scanning.total)} of ${scanning.total} · ${scanning.found} found…`));
+      return section;
+    }
+
+    const actions = createElement('div', 'health-section__actions');
+
+    const extract = createElement('button', 'btn btn--secondary btn--sm', missing > 0 ? 'Extract missing capture dates' : 'Nothing missing');
+    extract.type = 'button';
+    extract.dataset.healthAction = 'extract-dates';
+    extract.disabled = state.busy || missing === 0;
+    actions.append(extract);
+
+    const rescan = createElement('button', 'btn btn--ghost btn--sm', 'Re-read all dates');
+    rescan.type = 'button';
+    rescan.dataset.healthAction = 'rescan-dates';
+    rescan.disabled = state.busy || state.gallery.images.length === 0;
+    actions.append(rescan);
+
+    section.append(actions);
+    return section;
+  }
+
   function healthSummary() {
     const largeRefs = new Set(state.gallery.images.map((image) => image.large));
     const thumbRefs = new Set(state.gallery.images.map((image) => image.thumb));
@@ -1815,6 +1950,7 @@
     const health = healthSummary();
 
     container.append(createConnectionTestSection());
+    container.append(createCaptureDateSection());
 
     const layout = createElement('section', 'health-section');
     layout.append(createElement('h3', null, 'Bucket layout'));
@@ -1916,6 +2052,23 @@
     $('progress').hidden = true;
     $('progress-fill').style.width = '0%';
     $('progress-label').textContent = '';
+  }
+
+  /* ---------- capture dates ---------- */
+
+  const EXIF_HEAD_BYTES = 256 * 1024;
+
+  async function readTakenAt(blob) {
+    const Exif = window.BrewstockExif;
+    if (!Exif || !blob || typeof blob.slice !== 'function') return '';
+
+    try {
+      const head = blob.slice(0, EXIF_HEAD_BYTES);
+      const result = Exif.read(await head.arrayBuffer());
+      return result ? result.takenAt : '';
+    } catch (_error) {
+      return '';
+    }
   }
 
   /* ---------- thumbnails ---------- */
@@ -2020,12 +2173,18 @@
       version: 1,
       baseUrl: (state.config.publicBaseUrl || state.gallery.baseUrl || '').replace(/\/+$/, ''),
       updatedAt: new Date().toISOString(),
-      images: state.gallery.images.map((image) => ({
-        key: image.key,
-        large: image.large,
-        thumb: image.thumb,
-        uploadedAt: image.uploadedAt,
-      })),
+      images: state.gallery.images.map((image) => {
+        const entry = {
+          key: image.key,
+          large: image.large,
+          thumb: image.thumb,
+        };
+
+        if (image.takenAt) entry.takenAt = image.takenAt;
+        if (image.uploadedAt) entry.uploadedAt = image.uploadedAt;
+
+        return entry;
+      }),
     }, null, 2);
   }
 
@@ -2111,6 +2270,7 @@
         if (mode === 'accept') {
           setCardStatus(key, 'Downloading…', 'busy');
           const blob = await state.client.getBlob(key);
+          const takenAt = await readTakenAt(blob);
 
           setCardStatus(key, 'Creating thumbnail…', 'busy');
           const thumbnail = await createThumbnail(blob);
@@ -2143,6 +2303,7 @@
             key,
             large: `large/${key}`,
             thumb: thumbKey,
+            takenAt,
             uploadedAt: new Date().toISOString(),
             thumbUrl: '',
           });
@@ -2770,6 +2931,10 @@
       await archiveDuplicates(health.duplicatesInRoot);
     } else if (name === 'run-connection-test') {
       await runConnectionTest();
+    } else if (name === 'extract-dates') {
+      await extractCaptureDates(false);
+    } else if (name === 'rescan-dates') {
+      await extractCaptureDates(true);
     } else if (name === 'copy-cors') {
       await copyCorsPolicy();
     }

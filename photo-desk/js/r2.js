@@ -309,8 +309,12 @@
       }, options || {}));
     }
 
-    async function getBlob(key) {
-      return request({ method: 'GET', key, responseType: 'blob' });
+    async function getBlob(key, options) {
+      const settings = options || {};
+      const headers = {};
+      if (settings.range) headers.range = settings.range;
+
+      return request({ method: 'GET', key, headers, responseType: 'blob' });
     }
 
     async function putObject(key, body, options) {
