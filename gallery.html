@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Photos from Brewstock 2026.">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Photo gallery - Brewstock</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="gallery">
+  <header class="site-header" data-component="nav">
+    <div class="header-inner container">
+      <a class="logo-link" href="index.html" aria-label="Brewstock home">
+        <img class="logo" src="images/brewstock-logo.png" alt="Brewstock" width="320" height="160">
+      </a>
+
+      <div class="header-actions">
+        <nav class="main-nav" aria-label="Primary">
+          <ul>
+            <li><a href="index.html" data-page="index">Home</a></li>
+            <li><a href="info.html" data-page="info">Event details</a></li>
+            <li data-feature="beer-list" hidden>
+              <a href="https://beers.brewstock.org" target="_blank" rel="noopener noreferrer">Beer List</a>
+            </li>
+          </ul>
+        </nav>
+
+        <a class="ticket-link" data-feature="tickets" href="https://events.humanitix.com/brewstock-2026" target="_blank" rel="noopener noreferrer">
+          Buy tickets
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section section--gallery" aria-labelledby="gallery-title">
+      <div class="container">
+        <div class="gallery-toolbar">
+          <h1 class="gallery-toolbar__title" id="gallery-title">Photo gallery</h1>
+
+          <div class="gallery-toolbar__controls">
+            <p class="gallery-status" id="gallery-status" role="status">Loading photos…</p>
+
+            <label class="gallery-pagesize">
+              <span class="gallery-pagesize__label">Photos per page</span>
+              <select class="gallery-pagesize__select" id="gallery-page-size">
+                <option value="12">12</option>
+                <option value="24" selected>24</option>
+                <option value="48">48</option>
+                <option value="96">96</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <ul class="gallery-grid" id="gallery-grid"></ul>
+
+        <nav class="gallery-pager" id="gallery-pager" aria-label="Gallery pages" hidden>
+          <button class="gallery-pager__button" id="gallery-prev" type="button">Previous</button>
+          <p class="gallery-pager__label" id="gallery-page-label" aria-live="polite"></p>
+          <button class="gallery-pager__button" id="gallery-next" type="button">Next</button>
+        </nav>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" data-component="footer">
+    <div class="footer-inner container">
+      <p class="footer__copyright">© 2026 Brewstock. All rights reserved.</p>
+      <p class="footer__acknowledgement">
+        Brewstock would like to Acknowledge the Traditional Owners of the lands where we are based in Melbourne's North,
+        The Wurrundjeri Woi-wurring people of the Kulin Nation. We pay our respects to their Elders past and present and
+        acknowledge their strong ongoing connections to land, water and culture. It's our privilege to meet, create and
+        live on this Country.
+      </p>
+    </div>
+  </footer>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-title" hidden>
+    <h2 class="visually-hidden" id="lightbox-title">Photo viewer</h2>
+
+    <div class="lightbox__bar">
+      <p class="lightbox__counter" id="lightbox-counter" aria-live="polite"></p>
+      <div class="lightbox__tools">
+        <div class="lightbox__zoom" role="group" aria-label="Zoom">
+          <button class="lightbox__tool lightbox__tool--icon" id="lightbox-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">&#8722;</button>
+          <span class="lightbox__zoom-level" id="lightbox-zoom-level" aria-live="polite">Fit</span>
+          <button class="lightbox__tool lightbox__tool--icon" id="lightbox-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">&#43;</button>
+        </div>
+        <a class="lightbox__tool" id="lightbox-download" href="#" target="_blank" rel="noopener">Download</a>
+        <button class="lightbox__tool" id="lightbox-close" type="button">Close</button>
+      </div>
+    </div>
+
+    <button class="lightbox__nav lightbox__nav--prev" id="lightbox-prev" type="button" aria-label="Previous photo">&#10094;</button>
+
+    <figure class="lightbox__stage">
+      <div class="lightbox__canvas" id="lightbox-canvas">
+        <img class="lightbox__image" id="lightbox-image" alt="">
+      </div>
+      <figcaption class="lightbox__status" id="lightbox-status"></figcaption>
+    </figure>
+
+    <button class="lightbox__nav lightbox__nav--next" id="lightbox-next" type="button" aria-label="Next photo">&#10095;</button>
+  </div>
+
+  <script src="js/components.js"></script>
+  <script src="js/gallery.js"></script>
+</body>
+</html>

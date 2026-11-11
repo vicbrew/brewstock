@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Photo desk - Brewstock</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="desk.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="container admin-header__inner">
+      <div class="admin-brand">
+        <img class="admin-brand__logo" src="../images/brewstock-logo.png" alt="Brewstock" width="320" height="160">
+        <span class="admin-brand__tag">Photo desk</span>
+      </div>
+
+      <div class="admin-connection" id="admin-connection" hidden>
+        <span class="admin-connection__state">
+          <span class="admin-connection__dot" aria-hidden="true"></span>
+          <span id="admin-connection-label">Connected</span>
+        </span>
+        <button type="button" class="btn btn--ghost" id="btn-refresh">Refresh</button>
+        <button type="button" class="btn btn--ghost" id="btn-disconnect">Disconnect</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="container">
+      <section class="admin-panel setup-panel" id="setup-panel" aria-labelledby="setup-title">
+        <h1 id="setup-title">Connect to the R2 bucket</h1>
+        <p class="setup-panel__intro">
+          This tool reads and writes the Brewstock image bucket directly from this browser. Credentials are held in
+          memory for this tab only — they are never saved to the site, to disk, or to browser storage.
+        </p>
+
+        <form id="setup-form" class="setup-form" autocomplete="off" novalidate>
+          <div class="field-grid">
+            <label class="field">
+              <span class="field__label">R2 account ID</span>
+              <input class="field__input" id="input-account" name="accountId" type="text" spellcheck="false" autocomplete="off" required>
+              <span class="field__hint">Cloudflare dashboard → R2 → Overview → Account ID.</span>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Bucket name</span>
+              <input class="field__input" id="input-bucket" name="bucket" type="text" spellcheck="false" autocomplete="off" required placeholder="brewstock-images">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Access key ID</span>
+              <input class="field__input" id="input-access-key" name="accessKeyId" type="text" spellcheck="false" autocomplete="off" required>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Secret access key</span>
+              <input class="field__input" id="input-secret-key" name="secretAccessKey" type="password" autocomplete="new-password" required>
+            </label>
+
+            <label class="field field--wide">
+              <span class="field__label">Public image base URL</span>
+              <input class="field__input" id="input-public-base" name="publicBaseUrl" type="url" spellcheck="false" autocomplete="off" value="https://img.brewstock.org" required>
+              <span class="field__hint">Where the gallery loads images from. Saved into <code>gallery.json</code> as <code>baseUrl</code>.</span>
+            </label>
+          </div>
+
+          <details class="setup-advanced">
+            <summary>Advanced</summary>
+            <label class="field">
+              <span class="field__label">Endpoint override (optional)</span>
+              <input class="field__input" id="input-endpoint" name="endpoint" type="url" spellcheck="false" autocomplete="off" placeholder="https://&lt;account-id&gt;.r2.cloudflarestorage.com">
+              <span class="field__hint">Only needed for EU or FedRAMP jurisdiction buckets.</span>
+            </label>
+          </details>
+
+          <label class="checkbox">
+            <input type="checkbox" id="input-remember" checked>
+            <span>Remember account, bucket and public URL in this browser (never the keys)</span>
+          </label>
+
+          <p class="alert alert--error" id="setup-error" hidden></p>
+
+          <div class="setup-form__actions">
+            <button type="submit" class="btn btn--primary btn--lg" id="btn-connect">Connect</button>
+            <span class="setup-form__status" id="connect-status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+
+        <details class="setup-help">
+          <summary>How to create the R2 credentials</summary>
+          <ol>
+            <li>In the Cloudflare dashboard, open <strong>R2</strong> → your images bucket → <strong>Settings</strong> →
+              <strong>CORS Policy</strong> and add the policy shown under <strong>Bucket health → CORS policy</strong>.
+              Do this first: the browser cannot reach the bucket until it is in place.</li>
+            <li>Open <strong>R2</strong> → <strong>Manage R2 API Tokens</strong> → <strong>Create API token</strong>.</li>
+            <li>Give it <strong>Object Read &amp; Write</strong> permission, scoped to the images bucket.</li>
+            <li>Copy the access key ID and secret access key shown once at creation time.</li>
+            <li>Connect, then run <strong>Bucket health → Run connection test</strong> to confirm read, write and delete
+              access before processing photos.</li>
+          </ol>
+          <p>
+            This page holds no photos and no credentials of its own. It cannot read or change anything in the bucket
+            without a valid R2 access key, so opening it without the keys only ever shows the sign-in form.
+          </p>
+        </details>
+      </section>
+
+      <section class="admin-app" id="app-panel" hidden>
+        <div class="admin-stats" id="admin-stats"></div>
+
+        <div class="alert alert--error" id="app-banner" hidden></div>
+
+        <div class="admin-tabbar">
+          <nav class="admin-tabs" role="tablist" aria-label="Photo desk sections">
+            <button type="button" class="admin-tab" role="tab" id="tab-button-new" aria-controls="tab-new" aria-selected="true" data-tab="new">
+              New images <span class="admin-tab__count" id="count-new">0</span>
+            </button>
+            <button type="button" class="admin-tab" role="tab" id="tab-button-processed" aria-controls="tab-processed" aria-selected="false" data-tab="processed">
+              In gallery <span class="admin-tab__count" id="count-processed">0</span>
+            </button>
+            <button type="button" class="admin-tab" role="tab" id="tab-button-archive" aria-controls="tab-archive" aria-selected="false" data-tab="archive">
+              Archived <span class="admin-tab__count" id="count-archive">0</span>
+            </button>
+            <button type="button" class="admin-tab" role="tab" id="tab-button-health" aria-controls="tab-health" aria-selected="false" data-tab="health">
+              Bucket health
+            </button>
+          </nav>
+
+          <label class="admin-pagesize">
+            <span class="admin-pagesize__label">Images per page</span>
+            <select class="field__input admin-pagesize__select" id="admin-page-size">
+              <option value="12">12</option>
+              <option value="24" selected>24</option>
+              <option value="48">48</option>
+              <option value="96">96</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="admin-panel admin-tabpanel" role="tabpanel" id="tab-new" aria-labelledby="tab-button-new">
+          <div class="toolbar">
+            <div class="toolbar__group">
+              <label class="checkbox">
+                <input type="checkbox" id="select-all">
+                <span>Select this page</span>
+              </label>
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-clear-selection">Clear</button>
+              <span class="toolbar__summary" id="selection-summary">Nothing selected</span>
+            </div>
+            <div class="toolbar__group">
+              <label class="visually-hidden" for="new-filter">Filter by filename</label>
+              <input class="field__input toolbar__filter" id="new-filter" type="search" placeholder="Filter filenames…" autocomplete="off">
+              <button type="button" class="btn btn--secondary" id="btn-archive" disabled>Archive selected</button>
+              <button type="button" class="btn btn--primary" id="btn-accept" disabled>Accept &amp; process</button>
+            </div>
+          </div>
+
+          <p class="panel-note">
+            Accepted images are copied to <code>large/</code>, a 500px thumbnail is written to <code>thumbs/</code>, and the
+            original is removed from the bucket root. Archived images move to <code>archive/</code> and never appear in the gallery.
+          </p>
+
+          <div class="progress" id="progress" hidden>
+            <div class="progress__bar"><span id="progress-fill"></span></div>
+            <p class="progress__label" id="progress-label" role="status" aria-live="polite"></p>
+          </div>
+
+          <div class="admin-grid" id="new-grid"></div>
+          <p class="empty-state" id="new-empty" hidden></p>
+          <div class="admin-pager" id="new-pager" hidden></div>
+        </div>
+
+        <div class="admin-panel admin-tabpanel" role="tabpanel" id="tab-processed" aria-labelledby="tab-button-processed" hidden>
+          <p class="panel-note">
+            The gallery shows images in this order. Drag a tile (or use the arrow buttons) to rearrange, then the new order is
+            saved to <code>gallery.json</code> automatically.
+          </p>
+
+          <div class="admin-grid" id="processed-grid"></div>
+          <p class="empty-state" id="processed-empty" hidden></p>
+          <div class="admin-pager" id="processed-pager" hidden></div>
+        </div>
+
+        <div class="admin-panel admin-tabpanel" role="tabpanel" id="tab-archive" aria-labelledby="tab-button-archive" hidden>
+          <div class="toolbar">
+            <div class="toolbar__group">
+              <label class="checkbox">
+                <input type="checkbox" id="archive-select-all">
+                <span>Select this page</span>
+              </label>
+              <button type="button" class="btn btn--ghost btn--sm" id="btn-archive-clear">Clear</button>
+              <span class="toolbar__summary" id="archive-selection-summary">Nothing selected</span>
+            </div>
+            <div class="toolbar__group">
+              <button type="button" class="btn btn--secondary" id="btn-archive-delete" disabled>Delete selected</button>
+              <button type="button" class="btn btn--primary" id="btn-archive-restore" disabled>Restore to gallery</button>
+            </div>
+          </div>
+
+          <p class="panel-note">
+            Archived images were ignored during review. Restoring one moves it from <code>archive/</code> back into the
+            gallery: the original goes to <code>large/</code>, a 500px thumbnail is written to <code>thumbs/</code>, and the
+            entry is added to <code>gallery.json</code>. Thumbnails are not generated for archived images, so the tiles below
+            load the full-size file.
+          </p>
+
+          <div class="admin-grid" id="archive-grid"></div>
+          <p class="empty-state" id="archive-empty" hidden></p>
+          <div class="admin-pager" id="archive-pager" hidden></div>
+        </div>
+
+        <div class="admin-panel admin-tabpanel" role="tabpanel" id="tab-health" aria-labelledby="tab-button-health" hidden>
+          <div class="toolbar">
+            <div class="toolbar__group">
+              <button type="button" class="btn btn--ghost" id="btn-run-health">Re-scan bucket</button>
+            </div>
+          </div>
+          <div id="health-content"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="confirm-dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+    <form method="dialog" class="confirm-dialog__form">
+      <h2 id="confirm-title">Confirm</h2>
+      <p id="confirm-message"></p>
+      <div class="confirm-dialog__actions">
+        <button class="btn btn--ghost" value="cancel" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--danger" value="confirm" id="confirm-ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title" hidden>
+    <h2 class="visually-hidden" id="viewer-title">Image preview</h2>
+
+    <div class="viewer__bar">
+      <p class="viewer__counter" id="viewer-counter" aria-live="polite"></p>
+
+      <div class="viewer__tools">
+        <div class="viewer__zoom" role="group" aria-label="Zoom">
+          <button class="viewer__tool viewer__tool--icon" id="viewer-zoom-out" type="button" aria-label="Zoom out" title="Zoom out">&#8722;</button>
+          <span class="viewer__zoom-level" id="viewer-zoom-level" aria-live="polite">Fit</span>
+          <button class="viewer__tool viewer__tool--icon" id="viewer-zoom-in" type="button" aria-label="Zoom in" title="Zoom in">&#43;</button>
+        </div>
+
+        <button class="viewer__tool viewer__toggle" id="viewer-select" type="button" aria-pressed="false">Select</button>
+        <button class="viewer__tool" id="viewer-close" type="button">Close</button>
+      </div>
+    </div>
+
+    <button class="viewer__nav viewer__nav--prev" id="viewer-prev" type="button" aria-label="Previous image">&#10094;</button>
+
+    <figure class="viewer__stage">
+      <div class="viewer__canvas" id="viewer-canvas">
+        <img class="viewer__image" id="viewer-image" alt="">
+      </div>
+      <figcaption class="viewer__status" id="viewer-status"></figcaption>
+    </figure>
+
+    <button class="viewer__nav viewer__nav--next" id="viewer-next" type="button" aria-label="Next image">&#10095;</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <noscript>
+    <p class="container alert alert--error">The photo desk needs JavaScript enabled.</p>
+  </noscript>
+
+  <script src="js/r2.js"></script>
+  <script src="js/desk.js"></script>
+</body>
+</html>

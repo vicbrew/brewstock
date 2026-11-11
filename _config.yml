@@ -1,0 +1,10 @@
+# GitHub Pages (Jekyll) configuration.
+#
+# The gallery and the organiser tool at photo-desk/ are both published but
+# unlisted. photo-desk holds no credentials and cannot reach the bucket
+# without a valid R2 key, so it is safe to serve from the public site.
+#
+# Keep the signing self-tests out of the published site.
+exclude:
+  - testing
+  - README.md
